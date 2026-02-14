@@ -1,1 +1,29 @@
-export const DB_NAME = "MultiMedia"
+export const DB_NAME = "Multimedia-web-app"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// export const DB_NAME = "MultiMedia"

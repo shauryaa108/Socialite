@@ -2,10 +2,28 @@
 import dotenv from 'dotenv'
 // import { DB_NAME } from './constants';
 import DBConnect from './db/index.js';
+dotenv.config({
+    path : './env'
+})
+
+
 
 // another method to setup the database connection
 DBConnect()
+.then(()=>{
+    app.on("error", (error)=>{
+        console.log("error occured : ", error);
+        
+    })
+    app.listen(process.env.PORT || 8000, ()=>{
+        console.log(`app is listening on port ${process.env.PORT}`)
+    })
+})
+.catch((err)=>{
+    console.log("Connection error : ", err)
+}
 
+)
 
 
 
