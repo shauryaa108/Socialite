@@ -1,6 +1,7 @@
 
 
 const HandleAsync = (requestHandler)=>{
+    // we write it beause we take and return a function in this higher order function
     return(req, res, next)=>{
         Promise.resolve(
             requestHandler(req, res, next)

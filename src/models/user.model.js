@@ -82,4 +82,6 @@ userSchema.methods.generate_refresh_token =  function(){
 )
 }
 
+// we don't pass access token in database we only use them for our use cases
+
 export const User = mongoose.model("User", userSchema)

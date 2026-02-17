@@ -18,6 +18,13 @@ app.use(express.json({limit : "16kb"}))
 app.use(express.urlencoded({extended:true, limit:"16kb"}))
 app.use(express.static("Public"))
 app.use(cookieParser())
+app.use(express.json())
+// route import
 
+import {router as userReg} from "./routes/user.route.js"
+
+// route declaration
+
+app.use("/api/v1/user", userReg)
 
 export {app}

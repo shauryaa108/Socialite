@@ -1,15 +1,16 @@
 // import mongoose from 'mongoose';
 import dotenv from 'dotenv'
 // import { DB_NAME } from './constants';
-import DBConnect from './db/index.js';
+import DB_Connect from './db/index.js';
+import { app } from './app.js';
 dotenv.config({
-    path : './env'
+    path : '../env'
 })
 
 
 
-// another method to setup the database connection
-DBConnect()
+// another method to check the database connection, we connected the db already in a seperate index file in db folder
+DB_Connect()
 .then(()=>{
     app.on("error", (error)=>{
         console.log("error occured : ", error);
