@@ -4,9 +4,11 @@ import dotenv from 'dotenv'
 import DB_Connect from './db/index.js';
 import { app } from './app.js';
 dotenv.config({
-    path : '../env'
+    path : './.env'
 })
 
+import fs from "fs";
+console.log("ENV EXISTS:", fs.existsSync(".env"));
 
 
 // another method to check the database connection, we connected the db already in a seperate index file in db folder
