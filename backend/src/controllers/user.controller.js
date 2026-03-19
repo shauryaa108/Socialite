@@ -213,11 +213,68 @@ const refreshAccessToken = HandleAsync(async (req, res)=>{
     }
 })
 
+const changeCurrentPassword = HandleAsync( async (req , res) => {
+    const {oldPassword, newPassword} = req.body
+    const user = await User.findById(req.user?._id) 
+    // check if password is correct
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+    if(!isPasswordCorrect){
+        throw new ApiError(400, "WRONG PASSWORD")
+    }
+    user.password = newPassword
+    await user.save({validateBeforeSave : false})
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "password changed successfully"))
+
+})
+
+const getCurrentUser = HandleAsync(async (req, res) => {
+    return res
+    .status(200)
+    .json(new ApiResponse(
+        200, 
+        req.user, 
+        "user fetched successfully !!"
+    ))
+})
+
+const updateAccountDetails = HandleAsync(async (req, res) => {
+    const {newfullname, newemail} = req.body
+    const updatedfields = {}
+    if(newfullname){
+        updatedfields.fullname = newfullname;
+    }
+    if(newemail){
+        updatedfields.email = newemail;
+    }
+    const user = await User.findByIdAndUpdate(req.user?._id, {
+        $set: updatedfields  
+    },
+    {new : true}
+    ).select("-password")
+
+    return res.status(200).json(
+        new ApiResponse(200, user, "account details updated successfully")
+    )
+})
+
+
+
 // use the status code visely it might fuck the whole postman request
 
 export {
     registerUser,
     loginUser,
     loggedout,
-    refreshAccessToken
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    // to be written
+    updateUserAvatar,
+    updateUserCoverImage,
+    getUserChannelProfile,
+    getWatchHistory
 }
