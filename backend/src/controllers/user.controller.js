@@ -260,7 +260,35 @@ const updateAccountDetails = HandleAsync(async (req, res) => {
     )
 })
 
+const updateUserAvatar = HandleAsync(async (req, res)=>{
+    const localavatarpath = req.file?.path
+    if(!localavatarpath){
+        return new ApiError(400, {} , "Missing avatar, kindly send it back")
+    }
+    const avatar = await uploadOnCloudinary(localavatarpath)
 
+    if(!avatar.url){
+        return new ApiError(400, {} , "There is a problem in uplaoding the find to cloudinary")
+    }
+
+    const user = await User.findByIdAndUpdate(req.user?._id, {
+        $set : 
+            {
+                avatar : avatar.url
+            },
+        },
+        {   
+            new : true
+        }
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, user, "avatar file updated")
+    )
+
+})
 
 // use the status code visely it might fuck the whole postman request
 
@@ -272,9 +300,10 @@ export {
     changeCurrentPassword,
     getCurrentUser,
     updateAccountDetails,
-    // to be written
     updateUserAvatar,
+    // to be written
     updateUserCoverImage,
     getUserChannelProfile,
     getWatchHistory
 }
+
