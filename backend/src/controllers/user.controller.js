@@ -4,6 +4,19 @@ import { User } from "../models/user.model.js";
 import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import jwt from "jsonwebtoken"
+import deletefromcloudinary from "../utils/deletefromcloudinary.js"
+
+// helper fucntions 
+const extractPublicId = (url) =>{
+    const parts = url.split('/')
+    const filename = parts[part.length - 1]
+    const folder = parts[parts.length - 2]
+    const publicId = `${folder}/${filename.split('.')[0]}`;
+    return publicId
+}
+
+
+// main fucntions
 
 const generateAccessAndRefereshTokens = async(userId) =>{
     try {
@@ -263,12 +276,12 @@ const updateAccountDetails = HandleAsync(async (req, res) => {
 const updateUserAvatar = HandleAsync(async (req, res)=>{
     const localavatarpath = req.file?.path
     if(!localavatarpath){
-        return new ApiError(400, {} , "Missing avatar, kindly send it back")
+        throw new ApiError(400, {} , "Missing avatar, kindly send it back")
     }
     const avatar = await uploadOnCloudinary(localavatarpath)
 
     if(!avatar.url){
-        return new ApiError(400, {} , "There is a problem in uplaoding the find to cloudinary")
+        throw new ApiError(400, {} , "There is a problem in uplaoding the find to cloudinary")
     }
 
     const user = await User.findByIdAndUpdate(req.user?._id, {
@@ -287,7 +300,108 @@ const updateUserAvatar = HandleAsync(async (req, res)=>{
     .json(
         new ApiResponse(200, user, "avatar file updated")
     )
+})
 
+const updateUserCoverImage = HandleAsync(async (req, res) => {
+    const coverimagepath = req.file?.path
+    if(!coverimagepath){
+        throw new  ApiError(400, {} , "can't get the cover image path")
+    }
+
+    const existingUser = await User.findById(req.user?._id)
+
+    if(!existingUser){
+        throw new ApiError(400, {} , "can't get the user to update the cover iamge")
+    }
+    
+    const coverImage = await uploadOnCloudinary(coverimagepath)
+    if(!coverImage || !coverImage.url){
+        throw new ApiError(400, {} , "Unable to upload cover image on cloudinary")
+    }
+
+    if(existingUser.coverImage){
+        const publicId = extractPublicId(existingUser.coverImage)
+        await deletefromcloudinary(publicId)
+    }
+
+    const user = await User.findByIdAndUpdate(req.user?._id, {
+        $set : {
+            coverImage : coverImage.url
+        },
+    },
+        {new : true}
+    ).select("-password")
+
+    if(!user){
+        throw new ApiError(400, {} , "problem in updating the database during cover image upload")
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, {user}, "uploaded new cover image successfully")
+    )
+})
+
+const getUserChannelProfile =HandleAsync(async (req, res) => {
+    const {username} = req.params
+    if(!username?.trim()){
+        throw new ApiError(400, {}, "something went wrong in fetching the channel details")
+    }
+    const channel = await User.aggregate([
+        {
+            $match : {
+                username : username?.toLowerCase()
+            }
+        },
+        {
+            $lookup : {
+                from : "subscriptions",
+                localField : "_id",
+                foreignField: "channel" ,
+                as : "subscribers"
+            }
+        },
+        {
+            $lookup : {
+                from : "subscriptions",
+                localField : "_id",
+                foreignField: "subscriber" ,
+                as : "subscribedTo"
+            }
+        },
+        {
+            $addFields : {
+                subscribersCount : {
+                    $size : "$subscribers"
+                },
+                channelsubscribedToCount : {
+                    $size : "$subscribedTo"
+                },
+                isSubscribed : {
+                    $cond : {
+                        if : {$in : [req.user?._id , "$subscribers.subscriber"]},
+                        then : true,
+                        else : false
+                    }
+                }
+            }
+        },
+        {
+            $project : {
+                fullName : 1,
+                avatar : 1,
+                coverImage : 1,
+                username : 1,
+                email : 1,
+                subscribersCount : 1,
+                channelsubscribedToCount : 1,
+                isSubscribed : 1
+            }
+        }
+    ])
+    if(!channel?.length){
+        throw new ApiError(404, {} , "channel not found")
+    }
+    return res.status(200).json(new ApiResponse(200, channel[0], "channel details fetched successfully"))
 })
 
 // use the status code visely it might fuck the whole postman request
@@ -301,9 +415,9 @@ export {
     getCurrentUser,
     updateAccountDetails,
     updateUserAvatar,
-    // to be written
     updateUserCoverImage,
     getUserChannelProfile,
+    // to be written
     getWatchHistory
 }
 
