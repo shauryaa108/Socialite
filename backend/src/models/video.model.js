@@ -3,7 +3,7 @@ import { User } from "./user.model";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate";
 
 const videoSchema = new mongoose.Schema({
-    videoFile: {
+    videoUrl: {
         type: String, // cloudnary url
         required:true,
     },
