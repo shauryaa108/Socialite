@@ -1,10 +1,10 @@
 import { HandleAsync } from "../utils/HandleAsync.js";
-import {ApiError} from "../utils/ApiError.js"
+import {ApiError} from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
-import {uploadOnCloudinary} from "../utils/cloudinary.js"
-import {ApiResponse} from "../utils/ApiResponse.js"
-import jwt from "jsonwebtoken"
-import deletefromcloudinary from "../utils/deletefromcloudinary.js"
+import {uploadOnCloudinary} from "../utils/cloudinary.js";
+import {ApiResponse} from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken";
+import deletefromcloudinary from "../utils/deletefromcloudinary.js";
 
 // helper fucntions 
 const extractPublicId = (url) =>{
@@ -14,7 +14,6 @@ const extractPublicId = (url) =>{
     const publicId = `${folder}/${filename.split('.')[0]}`;
     return publicId
 }
-
 
 // main fucntions
 
@@ -244,6 +243,8 @@ const changeCurrentPassword = HandleAsync( async (req , res) => {
 })
 
 const getCurrentUser = HandleAsync(async (req, res) => {
+    const user = await User.findById(req.user._id)
+        .select("-password -refreshToken");
     return res
     .status(200)
     .json(new ApiResponse(
@@ -404,6 +405,59 @@ const getUserChannelProfile =HandleAsync(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, channel[0], "channel details fetched successfully"))
 })
 
+const getWatchHistory = HandleAsync(async (req, res) => {
+    const user = await User.aggregate([
+        {   //* got my user
+            $match : {
+                _id : new mongoose.Types.ObjectId(user.req._id)
+            }
+        },
+        {   //* got my videos in the history 
+            $lookup : {
+                from : "videos",
+                localField : "watchHistory",
+                foreignField: "_id",
+                as : "watchHistory",
+                pipeline: [
+                    {   //* got my owner of each video
+                        $lookup : {
+                            from : "users",
+                            localField : "owner",
+                            foreignField : "_id",
+                            as : "owner",
+                            pipeline : [
+                                { //* got only important stuff from the owner
+                                    $project : {
+                                        username : 1,
+                                        fullName : 1,
+                                        avatar : 1
+                                    }
+                                }
+                            ]
+                        }
+                    }, 
+                    {
+                        $addFields : {
+                            owner : {
+                                $first : "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    return res
+    .status(200)
+    .json(new ApiResponse(
+                            200,
+                            user[0].watchHistory ,
+                            "User watch history fetched successfully"
+                        )
+        )
+})
+
 // use the status code visely it might fuck the whole postman request
 
 export {
@@ -417,7 +471,6 @@ export {
     updateUserAvatar,
     updateUserCoverImage,
     getUserChannelProfile,
-    // to be written
     getWatchHistory
 }
 
