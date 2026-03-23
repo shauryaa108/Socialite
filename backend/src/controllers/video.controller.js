@@ -4,9 +4,9 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { Video } from "../models/video.model.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import mongoose from "mongoose";
+import deletefromcloudinary from "../utils/deletefromcloudinary.js";
 
-
-const getAllVideos = asyncHandler(async (req, res) => {
+const getAllVideos = HandleAsync(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
     //TODO: get all videos based on query, sort, pagination
 
@@ -33,7 +33,6 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
 
 })
-
 
 const publishAvideo = HandleAsync(async (req, res) => {
     const {title, description, thumbnail} = req.body
@@ -72,7 +71,7 @@ const publishAvideo = HandleAsync(async (req, res) => {
 
 })
 
-const getVideoById = asyncHandler(async (req, res) => {
+const getVideoById = HandleAsync(async (req, res) => {
     const { videoId } = req.params
     if(!mongoose.Types.ObjectId.isValid(videoId)){
         throw new ApiError(400, {} , "Invalid video id")
@@ -85,7 +84,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, video, "video fetched successfully"))
 })
 
-const updateVideo = asyncHandler(async (req, res) => {
+const updateVideo = HandleAsync(async (req, res) => {
     const { videoId } = req.params
     if(!mongoose.Types.ObjectId.isValid(videoId)){
         throw new ApiError(400, {} , "Wrong/invalid video id")
@@ -95,7 +94,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     const newThumbnailPath = req.file?.path
     const updateFields = {
         ...(newTitle && {title : newTitle}),
-        ...(newDescription && {discription : newDescription}),
+        ...(newDescription && {description : newDescription}),
         ...(newThumbnailPath && {thumbnail : newThumbnailPath})
     }
     if(Object.keys(updateFields).length === 0 ){
@@ -113,10 +112,40 @@ const updateVideo = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, video , "Video updated successfully"))
 })
 
+const deleteVideo = HandleAsync(async (req, res) => {
+    const { videoId } = req.params
+    if(!mongoose.Types.ObjectId.isValid(videoId)){
+        throw new ApiError(400, {} , "invalid video id")
+    }
+    const userId = req.user?._id
+    if(!userId){
+        throw new ApiError(403 , {} , "unverified user action")
+    }
+    const existingVideo = await Video.findById(videoId)
+    if(!existingVideo){
+        throw new ApiError(404 , {} , "video can't be fetched to perform the delete action")
+    }
+    if(!existingVideo.owner.equals(userId)){
+        throw new ApiError(403 , {} , "you don't have the access to delete this video")
+    }
+    const deletedVideo = await Video.findByIdAndDelete(videoId)
+    if(!deletedVideo){
+        throw new ApiError(404 , {} , "video doesn't exist in the database")
+    }
+    if(deletedVideo.publicId){
+        try {
+            await deletefromcloudinary(deletedVideo.publicId)
+        } catch (error) {
+            console.log(error.message)
+        }
+    }
+    return res.status(200).json(new ApiResponse(200, deletedVideo , "video is deleted from the databse successfully"))
+})
+
 export {
     publishAvideo,
     getAllVideos,
     getVideoById,
-    updateVideo
-
+    updateVideo,
+    deleteVideo
 }
