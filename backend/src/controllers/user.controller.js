@@ -5,6 +5,7 @@ import {uploadOnCloudinary} from "../utils/cloudinary.js";
 import {ApiResponse} from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import deletefromcloudinary from "../utils/deletefromcloudinary.js";
+import { CLIENT_RENEG_LIMIT } from "tls";
 
 // helper fucntions 
 const extractPublicId = (url) =>{
@@ -61,6 +62,7 @@ const registerUser = HandleAsync(async (req, res)=>{
         throw new ApiError(409, "User Already exist")
     }
     // file - avatar
+    console.log("req.files : ", req.files.avatar[0].path)
     const avatarFilePath = req.files?.avatar[0]?.path
     // classsic method, and we do it because coverimage is optional so we are checking if we have coverimage or not, if we
     // don't have the cover image then we will just check it here as it is
@@ -74,7 +76,9 @@ const registerUser = HandleAsync(async (req, res)=>{
         throw new ApiError(400, "Didn't recieved avatar, kindly fill the mandatory field")
     }
 
+    // console.log("avatar file path : ", avatarFilePath)
     const avatar =  await uploadOnCloudinary(avatarFilePath)
+    // console.log("avatar upload response : ", avatar)
     if(!avatar){
         throw new ApiError(500, "wasn't able to upload avatar")
     }
