@@ -191,6 +191,13 @@ const toggleUploadStatus = HandleAsync(async (req, res) => {
    if(!mongoose.isValidObjectId(videoId)){
     throw new ApiError(400 , "can not get the video id or video id not found")
    }
+   const existingVideo = await Video.findById(videoId)
+    if(!existingVideo){
+        throw new ApiError(404 , {} , "video can't be fetched to perform the delete action")
+    }
+    if(!existingVideo.owner.equals(req.user._id)){
+        throw new ApiError(403 , {} , "you don't have the access to delete this video")
+    }
    const toggledVideo = await Video.findOneAndUpdate(
 	{
 		_id : videoId,

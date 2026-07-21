@@ -8,6 +8,9 @@ import { HandleAsync } from "../utils/HandleAsync.js"
 
 const toggleSubscription = HandleAsync(async (req, res) => {
     const {channelId} = req.params
+    if (!mongoose.isValidObjectId(channelId)) {
+        throw new ApiError(400, "Invalid channel ID");
+    }
     const subscribe = await Subscription.aggregate([
         {
             $match:{

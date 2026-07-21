@@ -1,7 +1,7 @@
 import mongoose , {isValidObjectId} from "mongoose";
-import { HandleAsync } from "../utils/HandleAsync";
-import { ApiError } from "../utils/ApiError";
-import { ApiResponse } from "../utils/ApiResponse";
+import { HandleAsync } from "../utils/HandleAsync.js";
+import { ApiError } from "../utils/ApiError.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { Like } from "../models/like.model.js";
 import { Video } from "../models/video.model.js";
 
@@ -19,6 +19,11 @@ const toggleVideoLike = HandleAsync(async (req, res) => {
     }
     // i have the video id and i have the user id
     // just find the like document
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
     const alreadyLiked = await Like.aggregate([
         {
             $match: {
