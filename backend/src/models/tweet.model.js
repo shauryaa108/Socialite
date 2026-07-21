@@ -4,7 +4,7 @@ import { User } from "./user.model";
 const tweetSchema = new mongoose.Schema({
     owner : {
         type : mongoose.Types.ObjectId,
-        ref : User,
+        ref : "User",
         required : true
     },
     content : {

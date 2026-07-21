@@ -84,7 +84,7 @@ const registerUser = HandleAsync(async (req, res)=>{
     }
     const coverImage = await uploadOnCloudinary(coverImagePath)
 
-    const user = await User.create({
+    const user = new User({
         fullName,
         email,
         username: username.toLowerCase(),
@@ -92,6 +92,7 @@ const registerUser = HandleAsync(async (req, res)=>{
         coverImage: coverImage?.url || "",
         password
     })
+    await user.save()
     const registeredUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
@@ -231,14 +232,14 @@ const refreshAccessToken = HandleAsync(async (req, res)=>{
 
 const changeCurrentPassword = HandleAsync( async (req , res) => {
     const {oldPassword, newPassword} = req.body
-    const user = await User.findById(req.user?._id) 
+    const user = await User.findById(req.user?._id).select("+password")
     // check if password is correct
     const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
     if(!isPasswordCorrect){
         throw new ApiError(400, "WRONG PASSWORD")
     }
     user.password = newPassword
-    await user.save({validateBeforeSave : false})
+    await user.save()
 
     return res
     .status(200)

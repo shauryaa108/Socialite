@@ -7,19 +7,19 @@ import { Tweet } from "./tweet.model";
 const likeSchema = new mongoose.Schema({
     comment : {
         type : mongoose.Types.ObjectId,
-        ref : Comment
+        ref : "Comment"
     },
     video : {
         type : mongoose.Types.ObjectId,
-        ref : Video
+        ref : "Video"
     },
     likedBy : {
         type : mongoose.Types.ObjectId,
-        ref : User
+        ref : "User"
     },
     tweet : {
         type : mongoose.Types.ObjectId,
-        ref : Tweet
+        ref : "Tweet"
     }
 }, {timestamps : true})
 

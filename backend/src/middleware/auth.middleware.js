@@ -1,11 +1,10 @@
 import { HandleAsync } from "../utils/HandleAsync.js";
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken"
-import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 
 export const verifyJWT = HandleAsync( async (req, res, next)=>{
-    try  {
+    try {
         const authHeader = req.headers.authorization;
 
         let token;
@@ -25,7 +24,7 @@ export const verifyJWT = HandleAsync( async (req, res, next)=>{
         if(!user){
             throw new ApiError(400, "Invalid authorisation token")
         }
-        // the same req is passed throughout the cycle so for controller to know which user to logout, we can no logout the desired user
+        // the same req is passed throughout the cycle so for controller to know which user to logout, we can now logout the desired user
         req.user = user;
         next()
     } catch (error) {

@@ -10,13 +10,15 @@ const playlistSchema = new mongoose.Schema({
     description : {
         type : String
     },
-    videos : {
-        type : mongoose.Types.ObjectId,
-        ref : Video
-    },
+    videos : [
+        {
+            type : mongoose.Types.ObjectId,
+            ref : "Video"
+        }
+    ],
     owner : {
         type : mongoose.Types.ObjectId,
-        ref : User
+        ref : "User"
     }
 }, {timestamps : true})
 

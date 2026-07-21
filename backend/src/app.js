@@ -22,9 +22,10 @@ app.use(express.urlencoded({extended:true, limit:"16kb"}))
 // route import
 
 import {router as userReg} from "./routes/user.route.js"
-
+import {router as commentReg} from "./routes/comment.route.js"
 // route declaration
 
 app.use("/api/v1/user", userReg)
+app.use("/api/v1/comment", commentReg)
 
 export {app}
